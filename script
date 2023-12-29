@@ -1,0 +1,85 @@
+-- Define a key to unlock all functions
+local key = "Demon"
+
+-- Define the mod menu name
+local modMenuName = "Demon"
+
+-- Define the hitbox size
+local hitboxSize = Vector3.new(5, 5, 5)
+
+-- Define the autofarm speed
+local autofarmSpeed = 1
+
+-- Define the aimbot toggle key
+local aimbotToggleKey = Enum.KeyCode.Q
+
+-- Define the autofarm toggle key
+local autofarmToggleKey = Enum.KeyCode.E
+
+-- Define the aimbot function
+local function aimbot()
+    local players = game:GetService("Players"):GetPlayers()
+    local closestPlayer = nil
+    local closestDistance = math.huge
+    local currentPos = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position
+    for i, player in pairs(players) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and player.TeamColor ~= game:GetService("Players").LocalPlayer.TeamColor then
+            local pos = player.Character.HumanoidRootPart.Position
+            local distance = (pos - currentPos).magnitude
+            if distance < closestDistance then
+                closestPlayer = player
+                closestDistance = distance
+            end
+        end
+    end
+    if closestPlayer then
+        local pos = closestPlayer.Character.HumanoidRootPart.Position
+        game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(pos)
+    end
+end
+
+-- Define the autofarm function
+local function autofarm()
+    while true do
+        wait(autofarmSpeed)
+        aimbot()
+        game:GetService("VirtualInputManager"):SendMouseButtonEvent(1, 0, true)
+        game:GetService("VirtualInputManager"):SendMouseButtonEvent(1, 0, false)
+    end
+end
+
+-- Define the mod menu
+local modMenu = loadstring(game:HttpGet("https://pastebin.com/raw/edJT9EGX"))()
+
+-- Add the aimbot toggle button to the mod menu
+modMenu:addToggle("Aimbot", aimbotToggleKey, function(enabled)
+    if enabled then
+        aimbotConnection = game:GetService("RunService").Heartbeat:Connect(aimbot)
+    else
+        aimbotConnection:Disconnect()
+    end
+end)
+
+-- Add the autofarm toggle button to the mod menu
+modMenu:addToggle("Autofarm", autofarmToggleKey, function(enabled)
+    if enabled then
+        autofarmThread = coroutine.create(autofarm)
+        coroutine.resume(autofarmThread)
+    else
+        coroutine.yield(autofarmThread)
+    end
+end)
+
+-- Add the key check to the mod menu
+modMenu:addKey(key, function()
+    modMenu:toggle()
+end)
+
+-- Set the mod menu name
+modMenu:setName(modMenuName)
+
+-- Create the hitbox
+local hitbox = require(game.ReplicatedStorage.HitboxModuleMain):CreateWithPart(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart, hitboxSize)
+
+-- Start the mod menu
+modMenu:toggle()
